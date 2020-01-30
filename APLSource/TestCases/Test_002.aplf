@@ -1,0 +1,43 @@
+ R←Test_002(stopFlag batchFlag);⎕TRAP;c;result;p;tempFolder;F;A;log;expected;pid;flag;counter
+⍝ Create an instance, create a function, )SAVE the workspace and quit that instance, then check for WS and log file.
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ F←##.FilesAndDirs ⋄ A←##.APLTreeUtils
+
+ c←⎕NEW ##.RideClient
+ p←##.APLProcess.CreateParms
+ tempFolder←F.GetTempSubDir⊃⎕SI
+ p.WorkspaceName←tempFolder,'\TestWS'
+ p.LogFilename←tempFolder,'\TestWS.log'
+ ##.APLTreeUtils.WriteUtf8File p.LogFilename''
+ p.CommandLineArgs←' maxws=64MB'
+ p.SessionFile←1
+ p.WindowsStyle←'Normal'
+ pid←c.Start p
+ →T.GoToTidyUp 0≠⊃('type' 2)##.FilesAndDirs.Dir p.LogFilename
+ ⎕DL 2
+ c.Execute')save ',p.WorkspaceName
+ c.Execute'log←⎕SE ⎕WG''Log'''
+ c.Execute'(⊂log) ⎕nput ''',tempFolder,'\Log.txt'''
+ c.Execute')off'
+ counter←flag←0
+ :Repeat
+     :Trap 0
+         →T.GoToTidyUp 0=⊃('type' 2)##.FilesAndDirs.Dir p.LogFilename
+         flag←1
+     :Else
+         ⎕DL 0.5
+         counter+←1
+     :EndTrap
+ :Until flag∨20<counter
+ log←##.APLTreeUtils.ReadUtf8File tempFolder,'\Log.txt'
+ expected←##.FilesAndDirs.NormalizePath tempFolder,'\TestWS.dws saved'
+ →T.GoToTidyUp~∨/expected⍷∊log
+
+ R←T._OK
+
+∆TidyUp:
+ :Trap 0 ⋄ c.Close ⋄ :EndTrap
+ :Trap 0 ⋄ F.RmDir tempFolder ⋄ :EndTrap
+⍝Done

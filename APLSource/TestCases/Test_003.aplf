@@ -1,0 +1,33 @@
+ R←Test_003(stopFlag batchFlag);⎕TRAP;c;result;buff;p;tempFolder;F;A
+⍝ Create an instance, create a namespace, populate it with a function, change that fn with the editor and finally quit that instance.
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ F←##.FilesAndDirs ⋄ A←##.APLTreeUtils
+
+ c←⎕NEW ##.RideClient
+ p←##.APLProcess.CreateParms
+ tempFolder←F.GetTempSubDir⊃⎕SI
+ p.WorkspaceName←tempFolder,'\TestWS'
+ p.LogFilename←tempFolder,'\TestWS.log'
+ p.CommandLineArgs←' maxws=64MB'
+ c.Start p
+
+ c.Execute'''TEMP''#.⎕NS'''''
+ c.EditAndFix'#.TEMP.Hello'('r←Hello' 'r←''World''')
+ buff←c.ExecuteAndFetchResult'#.TEMP.Hello'
+ →T.GoToTidyUp buff≢,⊂'World'
+ c.EditAndFix'#.TEMP.Hello2'('r←Hello2 name' 'r←''Hello '',name')
+ buff←c.ExecuteAndFetchResult'#.TEMP.Hello2 ''Kai'''
+ →T.GoToTidyUp buff≢,⊂'Hello Kai'
+ c.EditAndFix'#.TEMP.Foo'('r←Foo' 'r←100 3⍴↑(''abc'' ''a'' 1)( ''Hi there'' ¯3 '''')( ''Firlefanz'' 2 ⍬)')
+ buff←c.ExecuteAndFetchResult'#.TEMP.Foo'
+ →T.GoToTidyUp 100 17≢⍴↑buff
+ c.Close
+
+ R←T._OK
+
+∆TidyUp:
+ :Trap 0 ⋄ c.Close ⋄ :EndTrap
+ :Trap 0 ⋄ F.RmDir tempFolder ⋄ :EndTrap
+⍝Done

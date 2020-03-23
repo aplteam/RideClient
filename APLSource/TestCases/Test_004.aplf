@@ -1,0 +1,41 @@
+ R←Test_004(stopFlag batchFlag);⎕TRAP;c;result;buff;p;tempFolder;F;A
+⍝ Create an instance, edit a (new) function, change it, call the function, check result.
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ F←##.FilesAndDirs ⋄ A←##.APLTreeUtils
+
+ c←⎕NEW ##.RideClient
+ p←##.APLProcess.CreateParms
+ tempFolder←F.GetTempSubDir⊃⎕SI
+ p.CommandLineArgs←' maxws=32MB'
+ :If 0
+     p.WindowsStyle←'Normal'
+ :EndIf
+ c.Start p
+
+ c.Execute'''Foo''#.⎕NS'''''
+ c.EditAndFix'#.Foo.Hello'('r←Hello' 'r←''World''')
+ buff←c.ExecuteAndFetchResult'#.Foo.Hello'
+ →T.GoToTidyUp buff≢,⊂'World'
+ ∘∘∘
+ c.Execute')ed #.Foo.Hello'
+ c.Execute⊂'RL'
+ c.Execute⊂'ER'
+ c.Execute'r←''Universe'''
+ c.Execute⊂'QT'
+ buff←c.ExecuteAndFetchResult'#.Foo.Hello'
+
+ buff←c.ExecuteAndFetchResult'#.TEMP.Hello2 ''Kai'''
+ →T.GoToTidyUp buff≢,⊂'Hello Kai'
+ c.EditAndFix'#.TEMP.Foo'('r←Foo' 'r←100 3⍴↑(''abc'' ''a'' 1)( ''Hi there'' ¯3 '''')( ''Firlefanz'' 2 ⍬)')
+ buff←c.ExecuteAndFetchResult'#.TEMP.Foo'
+ →T.GoToTidyUp 100 17≢⍴↑buff
+ c.Close
+
+ R←T._OK
+
+∆TidyUp:
+ :Trap 0 ⋄ c.Close ⋄ :EndTrap
+ :Trap 0 ⋄ F.RmDir tempFolder ⋄ :EndTrap
+⍝Done

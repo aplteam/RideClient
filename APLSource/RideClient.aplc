@@ -18,11 +18,13 @@
 
     ∇ r←Version
       :Access Public Shared
-      r←'Client' '0.5.0.4' '2020-01-30'
+      r←'Client' '0.6.0.6' '2020-03-23'
     ∇
 
     ∇ History
       :Access Public Shared
+    ⍝ * 0.6.0 by Kai
+    ⍝   * File extension is now .aplc rather than .dyalog
     ⍝ * 0.5.0 by Kai
     ⍝   * APLProcess is now a dependency
     ⍝   * Method `Start` now returns the ID of the process created.
